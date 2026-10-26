@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quittung</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff6a1a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root { --fire:#ff6a1a; --ink:#1d1d1f; --line:#6f6f74; --bg:#fff4ea; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--bg); color:var(--ink); }
+
+  /* ---------- شاشة التحكم ---------- */
+  .bar { max-width:860px; margin:0 auto; padding:16px; display:grid; gap:12px; }
+  .card { background:#fff; border-radius:16px; padding:14px 16px; box-shadow:0 2px 10px rgba(0,0,0,.07); }
+  .card h2 { margin:0 0 8px; font-size:16px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  input[type=text] { flex:1; min-width:180px; padding:10px; border:1px solid #ddd; border-radius:10px; font-size:15px; }
+  button { border:0; border-radius:14px; padding:14px 20px; font-size:17px; font-weight:700; cursor:pointer; background:var(--fire); color:#fff; }
+  button.lang { background:#eee; color:var(--ink); font-size:15px; padding:10px 16px; }
+  button.lang.on { background:var(--ink); color:#fff; }
+  .hint { font-size:13px; color:#666; margin:6px 0 0; }
+  .last { font-size:14px; color:#444; margin:10px 0 0; }
+
+  /* ---------- الورقة ---------- */
+  .stage { display:flex; justify-content:center; padding:0 0 40px; overflow:hidden; }
+  .sheet { width:210mm; height:297mm; background:#fff; display:grid; flex:none;
+           grid-template-columns:105mm 105mm; grid-template-rows:148.5mm 148.5mm;
+           box-shadow:0 4px 20px rgba(0,0,0,.15); position:relative; transform-origin:top center; }
+  .q { padding:6mm 7mm 5mm; display:flex; flex-direction:column; font-size:10.5pt; position:relative; overflow:hidden; }
+  .sheet::before { content:""; position:absolute; left:50%; top:0; bottom:0; border-left:1px dashed #bbb; }
+  .sheet::after  { content:""; position:absolute; top:50%; left:0; right:0; border-top:1px dashed #bbb; }
+
+  .head { display:flex; justify-content:space-between; align-items:flex-start; gap:4mm; }
+  .shop { font-size:9.5pt; line-height:1.25; white-space:pre-line; font-weight:700; }
+  .tag { font-size:9.5pt; font-weight:800; border:1.5px solid var(--ink); border-radius:3mm; padding:.8mm 2.6mm; white-space:nowrap; }
+  h1 { margin:2mm 0 0; font-size:18pt; letter-spacing:.3px; line-height:1.1; }
+  .nr { font-size:12pt; margin-top:1mm; }
+  .nr b { font-size:14pt; letter-spacing:1.5px; }
+
+  .fld { margin-top:3mm; }
+  .fld label { display:block; font-size:9pt; color:#444; font-weight:600; white-space:nowrap; }
+  .fld .ln { border-bottom:1.2px solid var(--line); height:6mm; }
+  .amount { display:flex; align-items:flex-end; gap:3mm; margin-top:3mm; }
+  .amount .box { flex:1; border:1.8px solid var(--ink); border-radius:2.5mm; height:12mm; position:relative; }
+  .amount .box > span { position:absolute; left:2mm; top:.6mm; font-size:8.5pt; color:#444; font-weight:600; white-space:nowrap; }
+  .amount .eur { font-size:17pt; font-weight:800; padding-bottom:2mm; }
+  .mwst { margin-top:3mm; font-size:9.5pt; font-weight:600; display:flex; gap:3mm; align-items:center; white-space:nowrap; }
+  .mwst .cb { display:inline-block; width:5mm; height:5mm; border:1.6px solid var(--ink); border-radius:1mm; vertical-align:-1mm; margin-inline-end:1.8mm; }
+  .two { display:flex; gap:5mm; }
+  .two .fld { flex:1; }
+  .thanks { font-size:9pt; margin-top:2mm; }
+  .sign { margin-top:auto; }
+  .sign .ln { border-bottom:1.2px solid var(--line); height:8mm; }
+  .sign label { font-size:9pt; color:#444; font-weight:600; }
+  [dir=rtl] { text-align:right; }
+
+  /* ---------- الطباعة ---------- */
+  @page { size: A4; margin: 0; }
+  @media print {
+    body { background:#fff; }
+    .bar { display:none; }
+    html, body { margin:0; padding:0; height:auto; }
+    .stage { display:block; padding:0; overflow:visible; height:auto !important; }
+    .sheet { box-shadow:none; transform:none !important; margin:0 !important; height:296.5mm; overflow:hidden; break-after:avoid; page-break-after:avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="card">
+    <h2>🧾 Quittung</h2>
+    <div class="row">
+      <button id="gen">🧾 ورقة جديدة</button>
+      <button id="print">🖨️ اطبع</button>
+    </div>
+    <p class="last" id="last"></p>
+    <p class="hint">الرقم بيُحسب مستعمل لما تطبع. اطبع على A4، مقاس 100%، بدون هوامش. إذا زر الطباعة ما اشتغل، افتح الصفحة بمتصفح Chrome.</p>
+  </div>
+  <div class="card">
+    <h2>🌍 لغة الفاتورة المطبوعة</h2>
+    <div class="row">
+      <button class="lang" data-l="de">DE</button>
+      <button class="lang" data-l="ar">ع</button>
+      <button class="lang" data-l="both">DE + ع</button>
+    </div>
+    <p class="hint">للفينانزامت الأفضل ألماني.</p>
+  </div>
+  <div class="card">
+    <h2>🏪 اسم وعنوان المطعم (بيطلع مطبوع)</h2>
+    <div class="row">
+      <input type="text" id="s1" placeholder="اسم المطعم">
+      <input type="text" id="s2" placeholder="الشارع والرقم">
+      <input type="text" id="s3" placeholder="الرمز البريدي والمدينة">
+    </div>
+    <p class="hint">بينحفظ على هالجهاز. لما يتغير الاسم لـ Flamo عدّله هون.</p>
+  </div>
+</div>
+
+<div class="stage" id="stage"><div class="sheet" id="sheet"></div></div>
+
+<script>
+(function(){
+  var KEY_LAST="quittung_last_seq", KEY_SHOP="quittung_shop", KEY_LANG="quittung_lang";
+  var ALPHA="0123456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+  var EPOCH=Date.UTC(2026,0,1)/1000;
+
+  var T = {
+    de:{title:"Quittung",nr:"Nr.",brutto:"Gesamt brutto",m7:"7 % MwSt",m19:"19 % MwSt",words:"Betrag in Worten",von:"von",fuer:"für",ort:"Ort",datum:"Datum",thanks:"Betrag dankend erhalten.",sign:"Unterschrift des Empfängers",orig:"ORIGINAL",kopie:"KOPIE"},
+    ar:{title:"إيصال استلام",nr:"رقم",brutto:"المبلغ الإجمالي",m7:"ضريبة 7%",m19:"ضريبة 19%",words:"المبلغ كتابةً",von:"من",fuer:"مقابل",ort:"المكان",datum:"التاريخ",thanks:"تم استلام المبلغ، شكراً.",sign:"توقيع المستلم",orig:"الأصل",kopie:"نسخة"}
+  };
+
+  function get(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+  function set(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+
+  function toCode(n){
+    var s="";
+    do{ s=ALPHA[n%ALPHA.length]+s; n=Math.floor(n/ALPHA.length);}while(n>0);
+    while(s.length<5) s="0"+s;
+    return s.slice(0,3)+"-"+s.slice(3);
+  }
+
+  // رقم فريد مبني على الوقت، ودايماً أكبر من آخر رقم انطبع
+  var cur = null; // {a:seq, b:seq}
+  function peekPair(){
+    var now=Math.floor(Date.now()/1000)-EPOCH;
+    var last=parseInt(get(KEY_LAST)||"0",10);
+    var a=Math.max(now,last+1);
+    return {a:a,b:a+1};
+  }
+  function commit(){ if(cur) set(KEY_LAST,String(cur.b)); }
+
+  function lang(){ return get(KEY_LANG)||"de"; }
+  function shopObj(){
+    var d={s1:"IU GENE",s2:"Gereonstraße 1",s3:"41747 Viersen"};
+    try{var v=JSON.parse(get(KEY_SHOP)); if(v) d=v;}catch(e){}
+    return d;
+  }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+  function lbl(key){
+    var l=lang();
+    if(l==="de") return '<span>'+esc(T.de[key])+'</span>';
+    if(l==="ar") return '<span dir="rtl">'+esc(T.ar[key])+'</span>';
+    return '<span>'+esc(T.de[key])+'</span> / <span dir="rtl">'+esc(T.ar[key])+'</span>';
+  }
+
+  function one(nr,tagKey,shop){
+    return ''+
+    '<div class="q">'+
+      '<div class="head"><div class="shop">'+shop+'</div><div class="tag">'+lbl(tagKey)+'</div></div>'+
+      '<h1>'+lbl("title")+'</h1>'+
+      '<div class="nr">'+lbl("nr")+' <b>'+nr+'</b></div>'+
+      '<div class="amount"><div class="box"><span>'+lbl("brutto")+'</span></div><div class="eur">€</div></div>'+
+      '<div class="mwst"><span><i class="cb"></i>'+lbl("m7")+'</span><span><i class="cb"></i>'+lbl("m19")+'</span></div>'+
+      '<div class="fld"><label>'+lbl("words")+'</label><div class="ln"></div></div>'+
+      '<div class="fld"><label>'+lbl("von")+'</label><div class="ln"></div></div>'+
+      '<div class="fld"><label>'+lbl("fuer")+'</label><div class="ln"></div></div>'+
+      '<div class="two"><div class="fld"><label>'+lbl("ort")+'</label><div class="ln"></div></div>'+
+      '<div class="fld"><label>'+lbl("datum")+'</label><div class="ln"></div></div></div>'+
+      '<div class="thanks">'+lbl("thanks")+'</div>'+
+      '<div class="sign"><div class="ln"></div><label>'+lbl("sign")+'</label></div>'+
+    '</div>';
+  }
+
+  function fit(){
+    var sheet=document.getElementById("sheet"), stage=document.getElementById("stage");
+    var w=sheet.offsetWidth, avail=window.innerWidth;
+    var z=Math.min(1,avail/w);
+    sheet.style.transform="scale("+z+")";
+    stage.style.height=(sheet.offsetHeight*z+40)+"px";
+  }
+
+  function render(){
+    var d=shopObj();
+    var shop=[d.s1,d.s2,d.s3].filter(Boolean).map(esc).join("\n");
+    var a=toCode(cur.a), b=toCode(cur.b);
+    document.getElementById("sheet").innerHTML=
+      one(a,"orig",shop)+one(a,"kopie",shop)+one(b,"orig",shop)+one(b,"kopie",shop);
+    document.getElementById("last").textContent="الأرقام عالورقة:  "+a+"  و  "+b;
+    var ls=document.querySelectorAll("button.lang");
+    for(var i=0;i<ls.length;i++) ls[i].classList.toggle("on",ls[i].getAttribute("data-l")===lang());
+    fit();
+  }
+
+  function newSheet(){ cur=peekPair(); render(); }
+
+  ["s1","s2","s3"].forEach(function(id){
+    var el=document.getElementById(id);
+    el.value=shopObj()[id]||"";
+    el.addEventListener("input",function(){
+      set(KEY_SHOP,JSON.stringify({s1:document.getElementById("s1").value,s2:document.getElementById("s2").value,s3:document.getElementById("s3").value}));
+      render();
+    });
+  });
+  var ls=document.querySelectorAll("button.lang");
+  for(var i=0;i<ls.length;i++) ls[i].addEventListener("click",function(){ set(KEY_LANG,this.getAttribute("data-l")); render(); });
+
+  document.getElementById("gen").addEventListener("click",newSheet);
+  document.getElementById("print").addEventListener("click",function(){ commit(); window.print(); });
+  window.addEventListener("resize",fit);
+  window.addEventListener("afterprint",function(){ newSheet(); });
+
+  newSheet();
+  if("serviceWorker" in navigator){ try{ navigator.serviceWorker.register("sw.js"); }catch(e){} }
+})();
+</script>
+</body>
+</html>
