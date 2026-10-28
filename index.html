@@ -49,6 +49,10 @@
   .amount .eur { font-size:17pt; font-weight:800; padding-bottom:2mm; }
   .mwst { margin-top:3mm; font-size:9.5pt; font-weight:600; display:flex; gap:3mm; align-items:center; white-space:nowrap; }
   .mwst .cb { display:inline-block; width:5mm; height:5mm; border:1.6px solid var(--ink); border-radius:1mm; vertical-align:-1mm; margin-inline-end:1.8mm; }
+  .sub { display:flex; align-items:flex-end; gap:2mm; margin-top:3.5mm; font-size:10.5pt; font-weight:700; white-space:nowrap; }
+  .sub .sl { min-width:38mm; }
+  .sub .sb { flex:1; border-bottom:1.4px solid var(--ink); height:7mm; }
+  .sub .se { font-size:13pt; }
   .two { display:flex; gap:5mm; }
   .two .fld { flex:1; }
   .thanks { font-size:9pt; margin-top:2mm; }
@@ -109,8 +113,8 @@
   var EPOCH=Date.UTC(2026,0,1)/1000;
 
   var T = {
-    de:{title:"Quittung",nr:"Nr.",brutto:"Gesamt brutto",m7:"7 % MwSt",m19:"19 % MwSt",words:"Betrag in Worten",von:"von",fuer:"für",ort:"Ort",datum:"Datum",thanks:"Betrag dankend erhalten.",sign:"Unterschrift des Empfängers",orig:"ORIGINAL",kopie:"KOPIE"},
-    ar:{title:"إيصال استلام",nr:"رقم",brutto:"المبلغ الإجمالي",m7:"ضريبة 7%",m19:"ضريبة 19%",words:"المبلغ كتابةً",von:"من",fuer:"مقابل",ort:"المكان",datum:"التاريخ",thanks:"تم استلام المبلغ، شكراً.",sign:"توقيع المستلم",orig:"الأصل",kopie:"نسخة"}
+    de:{title:"Quittung",nr:"Nr.",brutto:"Gesamt brutto",sp:"Speisen (7 %)",dr:"Getränke (19 %)",von:"von",fuer:"für",ort:"Ort",datum:"Datum",thanks:"Betrag dankend erhalten.",sign:"Unterschrift des Empfängers",orig:"ORIGINAL",kopie:"KOPIE"},
+    ar:{title:"إيصال استلام",nr:"رقم",brutto:"المبلغ الإجمالي",sp:"أكل (7%)",dr:"مشروبات (19%)",von:"من",fuer:"مقابل",ort:"المكان",datum:"التاريخ",thanks:"تم استلام المبلغ، شكراً.",sign:"توقيع المستلم",orig:"الأصل",kopie:"نسخة"}
   };
 
   function get(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
@@ -155,8 +159,8 @@
       '<h1>'+lbl("title")+'</h1>'+
       '<div class="nr">'+lbl("nr")+' <b>'+nr+'</b></div>'+
       '<div class="amount"><div class="box"><span>'+lbl("brutto")+'</span></div><div class="eur">€</div></div>'+
-      '<div class="mwst"><span><i class="cb"></i>'+lbl("m7")+'</span><span><i class="cb"></i>'+lbl("m19")+'</span></div>'+
-      '<div class="fld"><label>'+lbl("words")+'</label><div class="ln"></div></div>'+
+      '<div class="sub"><span class="sl">'+lbl("sp")+'</span><span class="sb"></span><span class="se">€</span></div>'+
+      '<div class="sub"><span class="sl">'+lbl("dr")+'</span><span class="sb"></span><span class="se">€</span></div>'+
       '<div class="fld"><label>'+lbl("von")+'</label><div class="ln"></div></div>'+
       '<div class="fld"><label>'+lbl("fuer")+'</label><div class="ln"></div></div>'+
       '<div class="two"><div class="fld"><label>'+lbl("ort")+'</label><div class="ln"></div></div>'+
